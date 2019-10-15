@@ -62,7 +62,7 @@ void TcpServer::start()
     // 判断是否已经开始运行，没有开始运行才会执行下面的步骤
     if (started_.getAndSet(1) == 0)
     {
-        // 初始化线程池
+        // 初始化线程池,并传入回调函数
         threadPool_->start(threadInitCallback_);
         // 判断 acceptor 对象的监听状态，此时应该没有监听
         assert(!acceptor_->listenning());
@@ -96,7 +96,7 @@ void TcpServer::newConnection(int sockfd, const InetAddress &peerAddr)
                                             localAddr,
                                             peerAddr));
     connections_[connName] = conn;
-    // 对处理函数进行一系列注册
+    // 对处理函数进行一系列注册，包括连接和读写
     conn->setConnectionCallback(connectionCallback_);
     conn->setMessageCallback(messageCallback_);
     conn->setWriteCompleteCallback(writeCompleteCallback_);

@@ -44,6 +44,7 @@ EventLoop *EventLoopThread::startLoop()
     EventLoop *loop = NULL;
     {
         MutexLockGuard lock(mutex_);
+        // 一直等到 Loop_ 创建完毕
         while (loop_ == NULL)
         {
             cond_.wait();
@@ -56,6 +57,7 @@ EventLoop *EventLoopThread::startLoop()
 
 void EventLoopThread::threadFunc()
 {
+    // 创建 loop
     EventLoop loop;
 
     if (callback_)

@@ -31,7 +31,7 @@ class EventLoopThreadPool;
 ///
 /// This is an interface class, so don't expose too much details.
 // server class,use single-thread and threadpool models
-// 对应的服务器类
+// 对应的服务器类
 class TcpServer : noncopyable
 {
 public:
