@@ -70,6 +70,7 @@ public:
         threadInitCallback_ = cb;
     }
     /// valid after calling start()
+    // 返回线程池
     std::shared_ptr<EventLoopThreadPool> threadPool()
     {
         return threadPool_;
@@ -105,23 +106,24 @@ public:
 
 private:
     /// Not thread safe, but in loop
+    /// 不是线程安全的,但是在单个线程中进行执行，因为每个 acceptor 均占用一个 eventLoop
     void newConnection(int sockfd, const InetAddress &peerAddr);
-    /// Thread safe.
+    /// Thread safe.线程安全操作
     void removeConnection(const TcpConnectionPtr &conn);
     /// Not thread safe, but in loop
     void removeConnectionInLoop(const TcpConnectionPtr &conn);
     // safe all Tcp connect,use string as key
+    // map[连接名字]连接对象
     typedef std::map<string, TcpConnectionPtr> ConnectionMap;
-    // 接收连接的 eventloop class，时间循环的
-    EventLoop *loop_; // the acceptor loop
-    const string ipPort_;   // port
-    // 服务器 name
-    const string name_;
-    // 用来接受新的连接的 acceptor，使用 unique_ptr 保存指针
+    // 主循环的 EventLoop，一般仅仅执行 newConnect 操作
+    EventLoop *loop_;     // the acceptor loop
+    const string ipPort_; // port
+    const string name_;   // 服务器 name
+    // 用来接受新的连接的 acceptor，使用 unique_ptr 包装指针
     std::unique_ptr<Acceptor> acceptor_; // avoid revealing Acceptor
-    // 线程池，使用 shared_ptr
+    // 线程池，使用 shared_ptr 包装
     std::shared_ptr<EventLoopThreadPool> threadPool_;
-    // 注册的回调函数
+    // 注册的回调函数，由用户进行注册
     ConnectionCallback connectionCallback_;
     MessageCallback messageCallback_;
     WriteCompleteCallback writeCompleteCallback_;
@@ -129,8 +131,9 @@ private:
     // 保持原子操作，用来记录服务器是否正在 loop
     AtomicInt32 started_;
     // always in loop thread
+    // 不用设置为 AtomicInt32 因为仅仅在本线程中进行调用
     int nextConnId_;
-    // 用来记录所有连接
+    // 用来保存所有连接对象
     ConnectionMap connections_;
 };
 

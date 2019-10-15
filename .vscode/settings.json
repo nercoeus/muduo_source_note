@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "functional": "cpp",
-        "*.ipp": "cpp"
+        "*.ipp": "cpp",
+        "utility": "cpp",
+        "memory": "cpp"
     }
 }

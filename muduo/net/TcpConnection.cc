@@ -331,6 +331,7 @@ void TcpConnection::connectEstablished()
   connectionCallback_(shared_from_this());
 }
 
+// 链接删除时的操作，会在链接断开后，最后执行
 void TcpConnection::connectDestroyed()
 {
   loop_->assertInLoopThread();
