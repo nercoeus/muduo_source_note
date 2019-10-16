@@ -43,6 +43,7 @@ public:
     /// repeats if @c interval > 0.0.
     ///
     /// Must be thread safe. Usually be called from other threads.
+    // 必须是线程安全的，可以跨线程调用。通常情况下被其它线程调用。
     TimerId addTimer(TimerCallback cb,
                      Timestamp when,
                      double interval);
@@ -53,6 +54,8 @@ private:
     // FIXME: use unique_ptr<Timer> instead of raw pointers.
     // This requires heterogeneous comparison lookup (N3465) from C++14
     // so that we can find an T* in a set<unique_ptr<T>>.
+    // 两种类型的 set，一种按时间戳排序，一种按Timer的地址排序
+    // 实际上，这两个 set 保存的是相同的定时器列表
     typedef std::pair<Timestamp, Timer *> Entry;
     typedef std::set<Entry> TimerList;
     typedef std::pair<Timer *, int64_t> ActiveTimer;
@@ -61,6 +64,7 @@ private:
     void addTimerInLoop(Timer *timer);
     void cancelInLoop(TimerId timerId);
     // called when timerfd alarms
+    // 当 timefd 触发时
     void handleRead();
     // move out all expired timers
     std::vector<Entry> getExpired(Timestamp now);
@@ -72,13 +76,14 @@ private:
     const int timerfd_;      // 注册到 Poll 中和 timeEvent 相关的 fd
     Channel timerfdChannel_; // timefd 对应的 channel
     // Timer list sorted by expiration
-    // 根据到期事件排序的事件 List
+    // 根据到期事件排序的已经事件 List
     TimerList timers_;
 
     // for cancel()
+    // activeTimers_是按对象地址排序的事件，存储的内容和 timers_ 完全一样
     ActiveTimerSet activeTimers_;
-    bool callingExpiredTimers_; /* atomic */
-    ActiveTimerSet cancelingTimers_;
+    bool callingExpiredTimers_; /* atomic */ // 是否正在处理超时事件
+    ActiveTimerSet cancelingTimers_;         // 保存的是被取消的定时器
 };
 
 } // namespace net

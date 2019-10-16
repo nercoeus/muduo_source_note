@@ -55,7 +55,9 @@ private:
     Timestamp expiration_;
     // 间隔时间
     const double interval_;
+    // 是否是可重复执行的
     const bool repeat_;
+    // 定时器的序列号
     const int64_t sequence_;
 
     static AtomicInt64 s_numCreated_;

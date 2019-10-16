@@ -39,11 +39,11 @@ public:
     }
 
     // default copy-ctor, dtor and assignment are okay
-
+    // 设置 TimeQueue 为友元，操作内部的数据
     friend class TimerQueue;
 
 private:
-    // 定时事件
+    // 定时事件的指针
     Timer *timer_;
     // 在队列中的位置
     int64_t sequence_;

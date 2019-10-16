@@ -27,3 +27,5 @@ how to use muduo in your project.
  | |  | | |_| | (_| | |_| | (_) |
  |_|  |_|\__,_|\__,_|\__,_|\___/
 
+# 参考 blog
+[定时器的实现](https://blog.csdn.net/leeds1993/article/details/52653083)
