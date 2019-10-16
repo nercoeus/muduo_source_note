@@ -22,30 +22,32 @@ namespace net
 {
 
 class EventLoop;
-
+// 对 Thread 和 EventLoop 的封装
 class EventLoopThread : noncopyable
 {
- public:
-  typedef std::function<void(EventLoop*)> ThreadInitCallback;
+public:
+    typedef std::function<void(EventLoop *)> ThreadInitCallback;
 
-  EventLoopThread(const ThreadInitCallback& cb = ThreadInitCallback(),
-                  const string& name = string());
-  ~EventLoopThread();
-  EventLoop* startLoop();
+    EventLoopThread(const ThreadInitCallback &cb = ThreadInitCallback(),
+                    const string &name = string());
+    ~EventLoopThread();
+    EventLoop *startLoop();
 
- private:
-  void threadFunc();
-
-  EventLoop* loop_ GUARDED_BY(mutex_);
-  bool exiting_;
-  Thread thread_;
-  MutexLock mutex_;
-  Condition cond_ GUARDED_BY(mutex_);
-  ThreadInitCallback callback_;
+private:
+    void threadFunc();
+    // 对应的 EventLoop，每个线程对应一个
+    EventLoop *loop_ GUARDED_BY(mutex_);
+    bool exiting_;
+    // 底层封装的线程
+    Thread thread_;
+    // 这里加入了 cond 来处理冲突
+    MutexLock mutex_;
+    Condition cond_ GUARDED_BY(mutex_);
+    // 创建时传入
+    ThreadInitCallback callback_;
 };
 
-}  // namespace net
-}  // namespace muduo
+} // namespace net
+} // namespace muduo
 
-#endif  // MUDUO_NET_EVENTLOOPTHREAD_H
-
+#endif // MUDUO_NET_EVENTLOOPTHREAD_H

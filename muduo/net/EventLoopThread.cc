@@ -17,7 +17,7 @@ EventLoopThread::EventLoopThread(const ThreadInitCallback &cb,
                                  const string &name)
     : loop_(NULL),
       exiting_(false),
-      thread_(std::bind(&EventLoopThread::threadFunc, this), name),
+      thread_(std::bind(&EventLoopThread::threadFunc, this), name),   // 在 Thread 中运行 EventLoopThread::threadFunc
       mutex_(),
       cond_(mutex_),
       callback_(cb)
@@ -35,6 +35,7 @@ EventLoopThread::~EventLoopThread()
         thread_.join();
     }
 }
+
 // 开始 loop
 EventLoop *EventLoopThread::startLoop()
 {
@@ -44,17 +45,19 @@ EventLoop *EventLoopThread::startLoop()
     EventLoop *loop = NULL;
     {
         MutexLockGuard lock(mutex_);
-        // 一直等到 Loop_ 创建完毕
+        // 一直等到 Loop_ 创建完毕，这是在 Thread 中运行的 EventLoopThread::threadFunc 进行创建的
         while (loop_ == NULL)
         {
+            // 等待信号量，创建完成后会发送信号量
             cond_.wait();
         }
         loop = loop_;
     }
-
+    // 返回创建好的 Loop
     return loop;
 }
 
+// 线程运行函数
 void EventLoopThread::threadFunc()
 {
     // 创建 loop
@@ -62,17 +65,19 @@ void EventLoopThread::threadFunc()
 
     if (callback_)
     {
+        // Eventloop 创建完成后进行回调
         callback_(&loop);
     }
 
     {
         MutexLockGuard lock(mutex_);
+        // 加锁后赋值 loop_
         loop_ = &loop;
         cond_.notify();
     }
-
     loop.loop();
     //assert(exiting_);
+    // 线程停止运行
     MutexLockGuard lock(mutex_);
     loop_ = NULL;
 }

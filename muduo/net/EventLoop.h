@@ -110,6 +110,7 @@ public:
     bool hasChannel(Channel *channel);
 
     // pid_t threadId() const { return threadId_; }
+    // 判断是否处当前线程
     void assertInLoopThread()
     {
         if (!isInLoopThread())
@@ -145,16 +146,19 @@ private:
 
     void printActiveChannels() const; // DEBUG
     typedef std::vector<Channel *> ChannelList;
-
+    // looping
     bool looping_; /* atomic */
     std::atomic<bool> quit_;
     // 正在处理事件
     bool eventHandling_;          /* atomic */
+    // 正在运行函数队列
     bool callingPendingFunctors_; /* atomic */
-    int64_t iteration_; // 循环次数
-    const pid_t threadId_;
+    int64_t iteration_;           // 循环次数
+    const pid_t threadId_;        // 线程 Id
     Timestamp pollReturnTime_;
+    // EventLoop 中的 Poll
     std::unique_ptr<Poller> poller_;
+    // 事件队列
     std::unique_ptr<TimerQueue> timerQueue_;
     // 用来接收时事件通知的 fd，对 EventLoop 进行管理
     int wakeupFd_;
@@ -164,10 +168,11 @@ private:
     boost::any context_;
 
     // scratch variables
-    ChannelList activeChannels_;    // 所有触发的 channel
-    Channel *currentActiveChannel_; // 当前活动 channel
+    ChannelList activeChannels_;    // 当前 Eventloop 持有的 channel
+    Channel *currentActiveChannel_; // 当前活动 channels
     // loop 需要全局锁
     mutable MutexLock mutex_;
+    // 等待在本线程上执行的函数
     std::vector<Functor> pendingFunctors_ GUARDED_BY(mutex_);
 };
 

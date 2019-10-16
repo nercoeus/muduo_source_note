@@ -121,7 +121,7 @@ void EventLoop::loop()
         activeChannels_.clear();
         // 调用 poll 或 epoll 等等
         pollReturnTime_ = poller_->poll(kPollTimeMs, &activeChannels_);
-        // 循环次数
+        // 循环次数++
         ++iteration_;
         if (Logger::logLevel() <= Logger::TRACE)
         {
@@ -161,7 +161,7 @@ void EventLoop::runInLoop(Functor cb)
 {
     if (isInLoopThread())
     {
-        cb(); // 在同一个线程
+        cb(); // 在同一个线程，直接执行
     }
     else
     {
@@ -176,24 +176,27 @@ void EventLoop::queueInLoop(Functor cb)
         // 添加到 pendingFunctors_ 中
         pendingFunctors_.push_back(std::move(cb));
     }
-
+    // 不是同一个线程但是正在执行函数，唤醒它
     if (!isInLoopThread() || callingPendingFunctors_)
     {
         wakeup();
     }
 }
 
+// 等待函数队列长度
 size_t EventLoop::queueSize() const
 {
     MutexLockGuard lock(mutex_);
     return pendingFunctors_.size();
 }
 
+// 在 time 时间执行
 TimerId EventLoop::runAt(Timestamp time, TimerCallback cb)
 {
     return timerQueue_->addTimer(std::move(cb), time, 0.0);
 }
 
+// 在 delay 之后执行
 TimerId EventLoop::runAfter(double delay, TimerCallback cb)
 {
     Timestamp time(addTime(Timestamp::now(), delay));
@@ -206,11 +209,13 @@ TimerId EventLoop::runEvery(double interval, TimerCallback cb)
     return timerQueue_->addTimer(std::move(cb), time, interval);
 }
 
+// 停止某个时间事件
 void EventLoop::cancel(TimerId timerId)
 {
     return timerQueue_->cancel(timerId);
 }
 
+// 更新 Poll
 void EventLoop::updateChannel(Channel *channel)
 {
     assert(channel->ownerLoop() == this);
@@ -218,6 +223,7 @@ void EventLoop::updateChannel(Channel *channel)
     poller_->updateChannel(channel);
 }
 
+// 删除一个 channel
 void EventLoop::removeChannel(Channel *channel)
 {
     assert(channel->ownerLoop() == this);
@@ -230,6 +236,7 @@ void EventLoop::removeChannel(Channel *channel)
     poller_->removeChannel(channel);
 }
 
+// 判断这个 channel 是否正在监听
 bool EventLoop::hasChannel(Channel *channel)
 {
     assert(channel->ownerLoop() == this);
@@ -243,6 +250,7 @@ void EventLoop::abortNotInLoopThread()
               << " was created in threadId_ = " << threadId_
               << ", current thread id = " << CurrentThread::tid();
 }
+
 // 向 wakeupFd_ 写入一个字节数据唤醒 poll 。。。
 void EventLoop::wakeup()
 {
@@ -253,7 +261,8 @@ void EventLoop::wakeup()
         LOG_ERROR << "EventLoop::wakeup() writes " << n << " bytes instead of 8";
     }
 }
-// 从 wakeupFd_ 读一个字节数据
+
+// 从 wakeupFd_ 读一个字节数据，因为前面唤醒 wakeup_ 写入了一个字节
 void EventLoop::handleRead()
 {
     uint64_t one = 1;
@@ -263,6 +272,7 @@ void EventLoop::handleRead()
         LOG_ERROR << "EventLoop::handleRead() reads " << n << " bytes instead of 8";
     }
 }
+
 // 队列中等待运行的函数
 void EventLoop::doPendingFunctors()
 {
@@ -271,11 +281,13 @@ void EventLoop::doPendingFunctors()
 
     {
         MutexLockGuard lock(mutex_);
+        // 把函数移到 functors 中
         functors.swap(pendingFunctors_);
     }
 
     for (const Functor &functor : functors)
     {
+        // 执行
         functor();
     }
     callingPendingFunctors_ = false;
