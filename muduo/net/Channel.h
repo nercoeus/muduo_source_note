@@ -30,8 +30,9 @@ class EventLoop;
 /// This class doesn't own the file descriptor.
 /// The file descriptor could be a socket,
 /// an eventfd, a timerfd, or a signalfd
-// 每个 channel 绑定一个 fd，封装了 fd 对应的一系列操作
-// 用来管理这个 fd 关心的事件，并将其同步到 poll 中
+// 每个 channel 绑定一个 fd，封装了 fd 在 Poll 中的一系列操作
+// 以及这个 fd 触发时的各种回调函数
+// 暂时仅供 acceptor TcpConnection 进行使用
 class Channel : noncopyable
 {
 public:
@@ -91,7 +92,7 @@ public:
         events_ |= kWriteEvent;
         update();
     }
-    // 删除可读事件到 poll
+    // 删除可写事件到 poll
     void disableWriting()
     {
         events_ &= ~kWriteEvent;
@@ -125,22 +126,22 @@ private:
     // 把 channel 添加/修改 至 poll
     void update();
     void handleEventWithGuard(Timestamp receiveTime);
-    // 三种事件
+    // 三种状态
     static const int kNoneEvent;
     static const int kReadEvent;
     static const int kWriteEvent;
 
-    EventLoop *loop_; // channel 所属的 eventloop
+    EventLoop *loop_; // channel 所属的 eventloop,即对应的 accept 的 EventLoop 或者 TcpConnection 的 EventLoop
     const int fd_;    // channel 所持有的 fd
     int events_;      // channel 持有 fd 关心事件类型
-    int revents_;     // it's the received event types of epoll or poll，目前活动的事件类型，由 poll 修改
-    int index_;       // used by Poller. 在 poll 中进行使用
+    int revents_;     // it's the received event types of epoll or poll，目前活动的事件类型，由 Poll 修改返回
+    int index_;       // used by Poller. 在 Poll 中进行使用
     bool logHup_;
-    // 这个 tie 用来保存 TcpConnection 对象指针
+    // 这个 tie 用来保存 TcpConnection 对象指针，没来锁定
     std::weak_ptr<void> tie_;
     // 标识是否关联了 TcpConnection
     bool tied_;
-    bool eventHandling_; // 用来表示正在处理事件
+    bool eventHandling_; // 用来表示正在处理事件，保证不会在析构处进行删除
     bool addedToLoop_;   // 用来标识是否在 poll 中
     // 总共只有 4 种事件的对应处理函数
     ReadEventCallback readCallback_; // 可读

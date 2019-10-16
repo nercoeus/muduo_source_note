@@ -24,11 +24,11 @@ const int Channel::kWriteEvent = POLLOUT;
 Channel::Channel(EventLoop *loop, int fd__)
     : loop_(loop),
       fd_(fd__),
-      events_(0),
+      events_(0),   // 默认 kNoneEvent
       revents_(0),
       index_(-1),
       logHup_(true),
-      tied_(false),
+      tied_(false),  // 默认不进行关联，accept 的 channel 不关联，TcpConnection 的 channel 进行关联
       eventHandling_(false),
       addedToLoop_(false)
 {
@@ -36,6 +36,7 @@ Channel::Channel(EventLoop *loop, int fd__)
 
 Channel::~Channel()
 {
+    // 还在处理事件，不能析构
     assert(!eventHandling_);
     assert(!addedToLoop_);
     if (loop_->isInLoopThread())
@@ -43,19 +44,24 @@ Channel::~Channel()
         assert(!loop_->hasChannel(this));
     }
 }
+
 // 关联 obj，一般是 TcpConnection
 void Channel::tie(const std::shared_ptr<void> &obj)
 {
+    // 进行绑定
     tie_ = obj;
     tied_ = true;
 }
+
 // channel::update 调用 EventLoop::updateChannel
 void Channel::update()
 {
     addedToLoop_ = true;
     // 更新在 loop 中的 channel 这里其实 loop 的 updateChannel 使用的是 poll 的 update
+    // 使用的就是 events 和 fd
     loop_->updateChannel(this);
 }
+
 // channel::update 调用 EventLoop::removeChannel
 void Channel::remove()
 {
@@ -64,12 +70,14 @@ void Channel::remove()
     // 从 loop 中删除这个 channel
     loop_->removeChannel(this);
 }
-// 事件回调处理
+
+// 事件回调处理（这个函数不用注册，直接在 EventLoop 中调用）
 void Channel::handleEvent(Timestamp receiveTime)
 {
     std::shared_ptr<void> guard;
     if (tied_)
     {
+        // 对于 TcpConnection 需要进行 Lock
         guard = tie_.lock();
         if (guard)
         {
@@ -78,15 +86,18 @@ void Channel::handleEvent(Timestamp receiveTime)
     }
     else
     {
+        // 对于 Acceptor 不需要进行 Lock，因为肯定不会发生冲突
         handleEventWithGuard(receiveTime);
     }
 }
 
+// 执行触发操作
 void Channel::handleEventWithGuard(Timestamp receiveTime)
 {
     // 事件处理中
     eventHandling_ = true;
     LOG_TRACE << reventsToString();
+    // 分别调用各种回调函数即可
     if ((revents_ & POLLHUP) && !(revents_ & POLLIN))
     {
         if (logHup_)
