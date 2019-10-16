@@ -21,8 +21,10 @@ using namespace muduo::net;
 
 Socket::~Socket()
 {
+    // 关闭描述符
     sockets::close(sockfd_);
 }
+
 // 对 getsockopt 的封装
 bool Socket::getTcpInfo(struct tcp_info *tcpi) const
 {
@@ -30,6 +32,7 @@ bool Socket::getTcpInfo(struct tcp_info *tcpi) const
     memZero(tcpi, len);
     return ::getsockopt(sockfd_, SOL_TCP, TCP_INFO, tcpi, &len) == 0;
 }
+
 // 获取 TCP 的信息，还是从 getsockopt 中获取的
 bool Socket::getTcpInfoString(char *buf, int len) const
 {
@@ -62,11 +65,13 @@ void Socket::bindAddress(const InetAddress &addr)
 {
     sockets::bindOrDie(sockfd_, addr.getSockAddr());
 }
+
 // 对 listen 的封装
 void Socket::listen()
 {
     sockets::listenOrDie(sockfd_);
 }
+
 // 对 accept 的封装
 int Socket::accept(InetAddress *peeraddr)
 {
@@ -79,7 +84,8 @@ int Socket::accept(InetAddress *peeraddr)
     }
     return connfd;
 }
-// // 对 shutdown 的封装
+
+// 对 shutdown 的封装
 void Socket::shutdownWrite()
 {
     sockets::shutdownWrite(sockfd_);
@@ -94,6 +100,7 @@ void Socket::setTcpNoDelay(bool on)
     // FIXME CHECK
 }
 
+// SO_REUSEAddr 套接字选项
 void Socket::setReuseAddr(bool on)
 {
     int optval = on ? 1 : 0;
@@ -120,6 +127,7 @@ void Socket::setReusePort(bool on)
 #endif
 }
 
+// SO_KEEPALIVE 套接字选项
 void Socket::setKeepAlive(bool on)
 {
     int optval = on ? 1 : 0;

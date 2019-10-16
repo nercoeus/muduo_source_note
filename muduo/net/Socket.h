@@ -31,6 +31,9 @@ class InetAddress;
 ///
 /// It closes the sockfd when desctructs.
 /// It's thread safe, all operations are delagated to OS.
+// 对 fd 的封装
+// 套接字选项可以参考下面
+// https://nercoeus.github.io/2019/09/25/07.%E5%A5%97%E6%8E%A5%E5%AD%97%E9%80%89%E9%A1%B9/
 class Socket : noncopyable
 {
 public:
@@ -70,17 +73,17 @@ public:
 
     ///
     /// Enable/disable SO_REUSEADDR
-    ///
+    /// SO_REUSEADDR 套接字描述符
     void setReuseAddr(bool on);
 
     ///
     /// Enable/disable SO_REUSEPORT
-    ///
+    /// SO_REUSEPORT 描述符
     void setReusePort(bool on);
 
     ///
     /// Enable/disable SO_KEEPALIVE
-    /// keepalive 算法
+    /// keepalive 算法 SO_KEEPALIVE
     void setKeepAlive(bool on);
 
 private:
