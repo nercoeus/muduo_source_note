@@ -54,12 +54,13 @@ private:
     Socket acceptSocket_;
     // 监听 channel（监听套接字对应的 channel）
     Channel acceptChannel_;
-    // 建立新连接后的回调函数，这个函数在 accept 所拥有的对象中进行注册
+    // 建立新连接后的回调函数，这个函数在拥有 accept 的对象中进行注册
     // 并不是 accept 创建时，也就是在 TcpServer 中进行注册
     // 并且注册的函数也定义在 TcpServer 中
     NewConnectionCallback newConnectionCallback_;
     // 是否正在监听的标志
     bool listenning_;
+    // https://blog.csdn.net/zhangyifei216/article/details/49789445 连接分析
     int idleFd_;
 };
 
