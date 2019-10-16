@@ -22,7 +22,7 @@ class AtomicIntegerT : noncopyable
 {
 public:
     // __sync_val_compare_and_swap   ：读出旧值，旧值与存储值相同则写入
-    // __sync_fetch_and_add  ：先获取值，再自加
+    // __sync_fetch_and_add  ：先获取值，再自加，返回旧值
     // __sync_lock_test_and_set  ：将value写入*ptr，对*ptr加锁，并返回操作之前*ptr的值
     // 以上3个函数有GCC提供，从汇编层面保证了操作的原子性，效率比加锁高。
     // 其余的所有函数均是调用这几个函数进行处理
@@ -96,6 +96,7 @@ public:
 
 private:
     // 原子操作的值，使用 volatile 每次都从内存中进行读取
+    // 确保对编译器不会把对 T 的操作进行优化
     volatile T value_;
 };
 } // namespace detail

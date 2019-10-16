@@ -24,7 +24,7 @@ string Timestamp::toString() const
   char buf[32] = {0};
   int64_t seconds = microSecondsSinceEpoch_ / kMicroSecondsPerSecond;
   int64_t microseconds = microSecondsSinceEpoch_ % kMicroSecondsPerSecond;
-  snprintf(buf, sizeof(buf)-1, "%" PRId64 ".%06" PRId64 "", seconds, microseconds);
+  snprintf(buf, sizeof(buf) - 1, "%" PRId64 ".%06" PRId64 "", seconds, microseconds);
   return buf;
 }
 
@@ -33,8 +33,9 @@ string Timestamp::toFormattedString(bool showMicroseconds) const
   char buf[64] = {0};
   time_t seconds = static_cast<time_t>(microSecondsSinceEpoch_ / kMicroSecondsPerSecond);
   struct tm tm_time;
+  // 把 time_t 结构中的信息转换成真实世界所使用的时间日期，存储在 tm_time 结构中
   gmtime_r(&seconds, &tm_time);
-
+  // 根据传入的要求,格式化输出
   if (showMicroseconds)
   {
     int microseconds = static_cast<int>(microSecondsSinceEpoch_ % kMicroSecondsPerSecond);
@@ -51,7 +52,7 @@ string Timestamp::toFormattedString(bool showMicroseconds) const
   }
   return buf;
 }
-
+// 返回现在的时间
 Timestamp Timestamp::now()
 {
   struct timeval tv;
@@ -59,4 +60,3 @@ Timestamp Timestamp::now()
   int64_t seconds = tv.tv_sec;
   return Timestamp(seconds * kMicroSecondsPerSecond + tv.tv_usec);
 }
-

@@ -41,12 +41,14 @@ private:
 
     bool started_;
     bool joined_;
+    // 线程 ID
     pthread_t pthreadId_;
+    // 线程 pid，存储起来，减小系统调用
     pid_t tid_;
     ThreadFunc func_;
     string name_;
     CountDownLatch latch_;
-
+    // 创建的线程数
     static AtomicInt32 numCreated_;
 };
 
