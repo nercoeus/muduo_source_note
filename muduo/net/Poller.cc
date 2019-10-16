@@ -19,6 +19,7 @@ Poller::Poller(EventLoop* loop)
 }
 
 Poller::~Poller() = default;
+
 // 判断某个 channel 是否存在
 bool Poller::hasChannel(Channel* channel) const
 {

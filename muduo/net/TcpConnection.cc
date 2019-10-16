@@ -19,7 +19,7 @@
 
 using namespace muduo;
 using namespace muduo::net;
-
+// 默认的处理函数，用户可以自己进行定义 TcpServer 中的函数进行覆盖
 void muduo::net::defaultConnectionCallback(const TcpConnectionPtr &conn)
 {
     LOG_TRACE << conn->localAddress().toIpPort() << " -> "
@@ -42,13 +42,13 @@ TcpConnection::TcpConnection(EventLoop *loop,
                              const InetAddress &peerAddr)
     : loop_(CHECK_NOTNULL(loop)),
       name_(nameArg),
-      state_(kConnecting),
-      reading_(true),
+      state_(kConnecting),    // 初始化就设置为 kConnecting
+      reading_(true),   // 初始化时设置为 reading
       socket_(new Socket(sockfd)),
       channel_(new Channel(loop, sockfd)),
       localAddr_(localAddr),
       peerAddr_(peerAddr),
-      highWaterMark_(64 * 1024 * 1024)
+      highWaterMark_(64 * 1024 * 1024)  // 64MB
 {
     // channel 获得 TcpConnection 的指针，通过回调注册进去的
     channel_->setReadCallback(
@@ -61,6 +61,7 @@ TcpConnection::TcpConnection(EventLoop *loop,
         std::bind(&TcpConnection::handleError, this));
     LOG_DEBUG << "TcpConnection::ctor[" << name_ << "] at " << this
               << " fd=" << sockfd;
+    // 设置 KeepAlive
     socket_->setKeepAlive(true);
 }
 
@@ -72,6 +73,7 @@ TcpConnection::~TcpConnection()
     assert(state_ == kDisconnected);
 }
 
+// 调用的 socket 的函数
 bool TcpConnection::getTcpInfo(struct tcp_info *tcpi) const
 {
     return socket_->getTcpInfo(tcpi);
@@ -267,6 +269,7 @@ void TcpConnection::forceCloseInLoop()
     }
 }
 
+// 返回状态
 const char *TcpConnection::stateToString() const
 {
     switch (state_)
@@ -345,6 +348,7 @@ void TcpConnection::connectDestroyed()
     channel_->remove();
 }
 
+// 四种处理操作
 void TcpConnection::handleRead(Timestamp receiveTime)
 {
     loop_->assertInLoopThread();

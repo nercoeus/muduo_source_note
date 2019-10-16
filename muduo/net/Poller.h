@@ -28,7 +28,7 @@ class Channel;
 /// Base class for IO Multiplexing
 ///
 /// This class doesn't own the Channel objects.
-// 一个虚基类
+// 一个虚基类，封装 Poll 具体实现
 class Poller : noncopyable
 {
 public:
@@ -59,10 +59,12 @@ public:
     }
 
 protected:
+    // 所有在这个 Poll 中的 Channel
     typedef std::map<int, Channel *> ChannelMap;
     ChannelMap channels_;
 
 private:
+    // Poll 对应的 EventLoop
     EventLoop *ownerLoop_;
 };
 
