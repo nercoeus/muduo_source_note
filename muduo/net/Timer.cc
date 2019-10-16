@@ -12,7 +12,7 @@ using namespace muduo;
 using namespace muduo::net;
 
 AtomicInt64 Timer::s_numCreated_;
-
+// 重新设置该事件
 void Timer::restart(Timestamp now)
 {
   if (repeat_)

@@ -25,39 +25,43 @@ namespace net
 ///
 class Timer : noncopyable
 {
- public:
-  Timer(TimerCallback cb, Timestamp when, double interval)
-    : callback_(std::move(cb)),
-      expiration_(when),
-      interval_(interval),
-      repeat_(interval > 0.0),
-      sequence_(s_numCreated_.incrementAndGet())
-  { }
+public:
+    Timer(TimerCallback cb, Timestamp when, double interval)
+        : callback_(std::move(cb)),
+          expiration_(when),
+          interval_(interval),
+          repeat_(interval > 0.0),
+          sequence_(s_numCreated_.incrementAndGet())
+    {
+    }
+    // 运行该函数
+    void run() const
+    {
+        callback_();
+    }
 
-  void run() const
-  {
-    callback_();
-  }
+    Timestamp expiration() const { return expiration_; }
+    bool repeat() const { return repeat_; }
+    int64_t sequence() const { return sequence_; }
 
-  Timestamp expiration() const  { return expiration_; }
-  bool repeat() const { return repeat_; }
-  int64_t sequence() const { return sequence_; }
+    void restart(Timestamp now);
 
-  void restart(Timestamp now);
+    static int64_t numCreated() { return s_numCreated_.get(); }
 
-  static int64_t numCreated() { return s_numCreated_.get(); }
+private:
+    // 时间到达时执行的操作
+    const TimerCallback callback_;
+    // 执行的时间
+    Timestamp expiration_;
+    // 间隔时间
+    const double interval_;
+    const bool repeat_;
+    const int64_t sequence_;
 
- private:
-  const TimerCallback callback_;
-  Timestamp expiration_;
-  const double interval_;
-  const bool repeat_;
-  const int64_t sequence_;
-
-  static AtomicInt64 s_numCreated_;
+    static AtomicInt64 s_numCreated_;
 };
 
-}  // namespace net
-}  // namespace muduo
+} // namespace net
+} // namespace muduo
 
-#endif  // MUDUO_NET_TIMER_H
+#endif // MUDUO_NET_TIMER_H
