@@ -14,6 +14,7 @@
 #include <deque>
 #include <vector>
 
+// 最新版 muduo 已经使用 EventThreadPool 来代替 threadPool
 namespace muduo
 {
 
@@ -55,7 +56,9 @@ class ThreadPool : noncopyable
   Condition notFull_ GUARDED_BY(mutex_);
   string name_;
   Task threadInitCallback_;
+  // 所有线程
   std::vector<std::unique_ptr<muduo::Thread>> threads_;
+  // 任务队列
   std::deque<Task> queue_ GUARDED_BY(mutex_);
   size_t maxQueueSize_;
   bool running_;

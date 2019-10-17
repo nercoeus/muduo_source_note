@@ -19,59 +19,66 @@ namespace detail
 {
 // This doesn't detect inherited member functions!
 // http://stackoverflow.com/questions/1966362/sfinae-to-check-for-inherited-member-functions
-template<typename T>
+template <typename T>
 struct has_no_destroy
 {
-  template <typename C> static char test(decltype(&C::no_destroy));
-  template <typename C> static int32_t test(...);
-  const static bool value = sizeof(test<T>(0)) == 1;
+    template <typename C>
+    static char test(decltype(&C::no_destroy));
+    template <typename C>
+    static int32_t test(...);
+    const static bool value = sizeof(test<T>(0)) == 1;
 };
-}  // namespace detail
+} // namespace detail
 
-template<typename T>
+// 线程安全的单例类
+template <typename T>
 class Singleton : noncopyable
 {
- public:
-  Singleton() = delete;
-  ~Singleton() = delete;
+public:
+    Singleton() = delete;
+    ~Singleton() = delete;
 
-  static T& instance()
-  {
-    pthread_once(&ponce_, &Singleton::init);
-    assert(value_ != NULL);
-    return *value_;
-  }
-
- private:
-  static void init()
-  {
-    value_ = new T();
-    if (!detail::has_no_destroy<T>::value)
+    static T &instance()
     {
-      ::atexit(destroy);
+        // 使用 pthread_once 保证在本进程中仅仅执行一次初始化过程
+        pthread_once(&ponce_, &Singleton::init);
+        assert(value_ != NULL);
+        return *value_;
     }
-  }
 
-  static void destroy()
-  {
-    typedef char T_must_be_complete_type[sizeof(T) == 0 ? -1 : 1];
-    T_must_be_complete_type dummy; (void) dummy;
+private:
+    // 初始化过程
+    static void init()
+    {
+        value_ = new T();
+        if (!detail::has_no_destroy<T>::value)
+        {
+            ::atexit(destroy);
+        }
+    }
 
-    delete value_;
-    value_ = NULL;
-  }
+    static void destroy()
+    {
+        typedef char T_must_be_complete_type[sizeof(T) == 0 ? -1 : 1];
+        T_must_be_complete_type dummy;
+        (void)dummy;
 
- private:
-  static pthread_once_t ponce_;
-  static T*             value_;
+        delete value_;
+        value_ = NULL;
+    }
+
+private:
+    static pthread_once_t ponce_;
+    // 单例对象指针
+    static T *value_;
 };
 
-template<typename T>
+template <typename T>
 pthread_once_t Singleton<T>::ponce_ = PTHREAD_ONCE_INIT;
 
-template<typename T>
-T* Singleton<T>::value_ = NULL;
+template <typename T>
+T *Singleton<T>::value_ = NULL;
 
-}  // namespace muduo
+} // namespace muduo
 
-#endif  // MUDUO_BASE_SINGLETON_H
+#endif // MUDUO_BASE_SINGLETON_H

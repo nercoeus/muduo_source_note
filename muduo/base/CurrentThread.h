@@ -13,6 +13,8 @@ namespace muduo
 namespace CurrentThread
 {
   // internal
+  // __thread 关键字是每个线程单独拥有的，不同线程相互独立
+  // __thread 变量的初始化只能用编译器常量
   extern __thread int t_cachedTid;  // 线程真实 tid 缓存
   extern __thread char t_tidString[32];
   extern __thread int t_tidStringLength;

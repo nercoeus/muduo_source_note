@@ -43,7 +43,7 @@ private:
     bool joined_;
     // 线程 ID
     pthread_t pthreadId_;
-    // 线程 pid，存储起来，减小系统调用
+    // 线程 tid，存储起来，减小系统调用
     pid_t tid_;
     ThreadFunc func_;
     string name_;
