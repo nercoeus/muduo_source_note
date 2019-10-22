@@ -116,6 +116,7 @@ private:
     // map[连接名字]连接对象
     typedef std::map<string, TcpConnectionPtr> ConnectionMap;
     // 主循环的 EventLoop，一般仅仅执行 newConnect 操作
+    // 该 loop_ 由客户进行创建，并不是在 TcpServer 中自动进行创建，这是因为会有多个监听接口，但是同一个线程只能有一个 Eventloop
     EventLoop *loop_;     // the acceptor loop
     const string ipPort_; // port
     const string name_;   // 服务器 name

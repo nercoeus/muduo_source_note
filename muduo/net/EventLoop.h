@@ -160,7 +160,7 @@ private:
     std::unique_ptr<Poller> poller_;
     // 事件队列
     std::unique_ptr<TimerQueue> timerQueue_;
-    // 用来接收时事件通知的 fd，对 EventLoop 进行管理
+    // 用来接收时事件通知的 fd，对 EventLoop 进行管理，使用了 eventfd
     int wakeupFd_;
     // unlike in TimerQueue, which is an internal class,
     // we don't expose Channel to client.
